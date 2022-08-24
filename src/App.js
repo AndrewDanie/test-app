@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, use, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 
 const App = () => {
@@ -9,30 +9,30 @@ const App = () => {
     city: '',
     city_id: '',
   })
-  const [streetList, setStreetList] = useState([])
 
   const getIPandCity = async () => {
     const data = await fetch('https://api.ipify.org?format=json')
     .then((response) => response.json())
-    // .then((data) => console.log(data))
     .catch(error => console.log("error", error))
     const ip = data.ip
 
-    
+    const token = state.daDataToken
     const daData = await fetch("https://suggestions.dadata.ru/suggestions/api/4_1/rs/iplocate/address?ip=", {
       headers: {
-        "Authorization": "Token " + state.daDataToken
+        "Authorization": "Token " + token
       }})
     .then((response) => response.json())
     .catch(error => console.log("error", error))
     const city = daData.location.data.city
     const city_id = daData.location.data.city_fias_id
-    console.log(ip, city, city_id)
+
     setState({
+      daDataToken: token,
       ip: ip,
       city: city,
       city_id: city_id,
     })
+
   };
 
   useEffect(getIPandCity, [])
@@ -45,7 +45,7 @@ const App = () => {
       <div> 
         Ваш Город: {state.city}
       </div>
-      <StreetForm Token="888e43ddc015dac9c9e66bd5f849f6927a7ef54a" city_id={state.city_id}/>
+      <StreetForm token={state.daDataToken} city_id={state.city_id}/>
     </div>
   )
 }
@@ -59,7 +59,6 @@ function StreetForm(props) {
   const handleClick = (event) => {
     event.preventDefault()
     console.log(props)
-    console.log('ey!!')
     console.log(query)
 
     let queryReq = {
@@ -87,7 +86,7 @@ function StreetForm(props) {
       method: "POST",
       headers: {
           "Content-Type": "application/json",
-          "Authorization": "Token " + props.Token,
+          "Authorization": "Token " + props.token,
       },
       body: JSON.stringify(query),
       })
@@ -101,7 +100,7 @@ function StreetForm(props) {
         if (suggestion.data.fias_level === "7") {
           console.log(suggestion.value)
           StreetArray.push({
-            id: id,
+            key: id,
             value: suggestion.value,
           })
           id++
@@ -128,6 +127,7 @@ function StreetForm(props) {
     </div>
   )
 }
+
 
 function StreetOption(props) {
   return (
