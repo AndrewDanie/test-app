@@ -54,6 +54,7 @@ const App = () => {
 function StreetForm(props) {
 
   const [query, setQuery] = useState('')
+  const [streetArray, setStreetArray] = useState([])
 
   const handleClick = (event) => {
     event.preventDefault()
@@ -67,7 +68,7 @@ function StreetForm(props) {
           "city_fias_id": props.city_id
         }
       ],
-      "fias_level": "7",
+      count: 20,
       "from_bound": {
         "value": "street"
       },
@@ -95,18 +96,25 @@ function StreetForm(props) {
     console.log(streetData)
     
     const StreetArray = []
+    let id = 0
     for (let suggestion of streetData.suggestions) {
         if (suggestion.data.fias_level === "7") {
           console.log(suggestion.value)
-          StreetArray.push(suggestion.value)
+          StreetArray.push({
+            id: id,
+            value: suggestion.value,
+          })
+          id++
         }
     }
+    setStreetArray(StreetArray)
     console.log(StreetArray)
     }
 
   const handleChange = (event) => {
     setQuery(event.target.value)
   }
+  const StreetComponents = streetArray.map(street => <StreetOption value={street.value} />)
 
   return (
     <div>
@@ -115,13 +123,17 @@ function StreetForm(props) {
         <button type='submit'>Подтвердить</button>
       </form>
       <select>
-        <option> Первая опция</option>
-        <option> Вторая опция</option>
-        <option> Третья опция</option>
-        <option> Четвертая опция</option>
-        <option> Пятая опция</option>
+        {StreetComponents}
       </select>
     </div>
+  )
+}
+
+function StreetOption(props) {
+  return (
+    <option>
+      {props.value}
+    </option>
   )
 }
 
