@@ -53,19 +53,21 @@ const App = () => {
 
 function StreetForm(props) {
 
-  const [mes, setMes] = useState('trrty')
+  const [query, setQuery] = useState('')
 
-  const handleClick = () => {
+  const handleClick = (event) => {
+    event.preventDefault()
     console.log(props)
     console.log('ey!!')
-    setMes('rrr')
+    console.log(query)
 
-    let query = {
+    let queryReq = {
       "locations": [
         {
           "city_fias_id": props.city_id
         }
       ],
+      "fias_level": "7",
       "from_bound": {
         "value": "street"
       },
@@ -73,9 +75,9 @@ function StreetForm(props) {
         "value": "street"
       },
       "restrict_value": true,
-      "query": "невск"
+      "query": query
     }
-    getStreetList(query)
+    getStreetList(queryReq)
   }
 
   const getStreetList = async (query) => {
@@ -91,13 +93,27 @@ function StreetForm(props) {
     .then((response) => response.json())
     .catch(error => console.log("error", error))
     console.log(streetData)
+    
+    const StreetArray = []
+    for (let suggestion of streetData.suggestions) {
+        if (suggestion.data.fias_level === "7") {
+          console.log(suggestion.value)
+          StreetArray.push(suggestion.value)
+        }
     }
+    console.log(StreetArray)
+    }
+
+  const handleChange = (event) => {
+    setQuery(event.target.value)
+  }
 
   return (
     <div>
-        <input type='text' pattern='^[А-Яа-яЁё\s]+$'></input>
-        <button button onClick={handleClick}>Подтвердить</button>
-      <div>{mes}</div>
+      <form onSubmit={handleClick}>
+        <input type='text' pattern='^[A-Za-zА-Яа-яЁё]+$' onChange={handleChange}></input>
+        <button type='submit'>Подтвердить</button>
+      </form>
       <select>
         <option> Первая опция</option>
         <option> Вторая опция</option>
