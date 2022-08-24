@@ -113,7 +113,7 @@ function StreetForm(props) {
   const handleChange = (event) => {
     setQuery(event.target.value)
   }
-  const StreetComponents = streetArray.map(street => <StreetOption value={street.value} />)
+  const StreetComponents = streetArray.map(street => <StreetOption key={street.key} value={street.value} />)
 
   return (
     <div>
