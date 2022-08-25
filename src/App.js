@@ -1,41 +1,41 @@
-import './App.css';
-import React, { useState, useEffect } from 'react';
+import './App.css'
+import React, { useState, useEffect } from 'react'
+import StreetForm from './StreetForm.js'
 
 
 const App = () => {
+  
   const [state, setState] = useState({
     daDataToken: "888e43ddc015dac9c9e66bd5f849f6927a7ef54a",
-    ip: '',
-    city: '',
-    city_id: '',
   })
 
-  const getIPandCity = async () => {
-    const data = await fetch('https://api.ipify.org?format=json')
-    .then((response) => response.json())
-    .catch(error => console.log("error", error))
-    const ip = data.ip
+  useEffect(() => {
+    async function getIPandCity() {
+      const ipURL = 'https://api.ipify.org?format=json'
+      const ipData = await fetch(ipURL)
+      .then((response) => response.json())
+      .catch(error => console.log("error", error))
+      
+      const token = state.daDataToken
+      const daDataURL = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/iplocate/address?ip='
+      const daData = await fetch(daDataURL, {
+        headers: {"Authorization": "Token " + token}})
+      .then((response) => response.json())
+      .catch(error => console.log("error", error))
 
-    const token = state.daDataToken
-    const daData = await fetch("https://suggestions.dadata.ru/suggestions/api/4_1/rs/iplocate/address?ip=", {
-      headers: {
-        "Authorization": "Token " + token
-      }})
-    .then((response) => response.json())
-    .catch(error => console.log("error", error))
-    const city = daData.location.data.city
-    const city_id = daData.location.data.city_fias_id
+      const ip = ipData.ip
+      const city = daData.location.data.city
+      const cityId = daData.location.data.city_fias_id
 
-    setState({
-      daDataToken: token,
-      ip: ip,
-      city: city,
-      city_id: city_id,
-    })
-
-  };
-
-  useEffect(getIPandCity, [])
+      setState({
+        daDataToken: token,
+        ip: ip,
+        city: city,
+        cityId: cityId,
+      })
+    }
+    getIPandCity()
+  }, [state.daDataToken]);
 
   return (
     <div className="App">
@@ -45,96 +45,9 @@ const App = () => {
       <div> 
         Ваш Город: {state.city}
       </div>
-      <StreetForm token={state.daDataToken} city_id={state.city_id}/>
+      <StreetForm token={state.daDataToken} cityId={state.cityId} />
     </div>
   )
 }
 
-
-function StreetForm(props) {
-
-  const [query, setQuery] = useState('')
-  const [streetArray, setStreetArray] = useState([])
-
-  const handleClick = (event) => {
-    event.preventDefault()
-    console.log(props)
-    console.log(query)
-
-    let queryReq = {
-      "locations": [
-        {
-          "city_fias_id": props.city_id
-        }
-      ],
-      count: 20,
-      "from_bound": {
-        "value": "street"
-      },
-      "to_bound": {
-        "value": "street"
-      },
-      "restrict_value": true,
-      "query": query
-    }
-    getStreetList(queryReq)
-  }
-
-  const getStreetList = async (query) => {
-
-    const streetData = await fetch("https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address", {
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Token " + props.token,
-      },
-      body: JSON.stringify(query),
-      })
-    .then((response) => response.json())
-    .catch(error => console.log("error", error))
-    console.log(streetData)
-    
-    const StreetArray = []
-    let id = 0
-    for (let suggestion of streetData.suggestions) {
-        if (suggestion.data.fias_level === "7") {
-          console.log(suggestion.value)
-          StreetArray.push({
-            key: id,
-            value: suggestion.value,
-          })
-          id++
-        }
-    }
-    setStreetArray(StreetArray)
-    console.log(StreetArray)
-    }
-
-  const handleChange = (event) => {
-    setQuery(event.target.value)
-  }
-  const StreetComponents = streetArray.map(street => <StreetOption key={street.key} value={street.value} />)
-
-  return (
-    <div>
-      <form onSubmit={handleClick}>
-        <input type='text' pattern='^[A-Za-zА-Яа-яЁё]+$' onChange={handleChange}></input>
-        <button type='submit'>Подтвердить</button>
-      </form>
-      <select>
-        {StreetComponents}
-      </select>
-    </div>
-  )
-}
-
-
-function StreetOption(props) {
-  return (
-    <option>
-      {props.value}
-    </option>
-  )
-}
-
-export default App;
+export default App
